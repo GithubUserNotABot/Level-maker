@@ -14,3 +14,4 @@ right click to move your character to mouse position
 Left Control to backtrack a block you made
 
 (p.s. run the "main.py" one!)
+(p.p.s check out the TODO.py file to see what i'm working on next)
