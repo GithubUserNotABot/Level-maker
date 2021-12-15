@@ -51,6 +51,10 @@ while True:
                 break_key[3] = False
                 key[3] = 'w'
 
+            # == Escape key ==
+            if event.key == pygame.K_ESCAPE:
+                print(" ==== Shutting down... ====")
+                raise SystemExit
             # == Control Z ==
             if event.key == pygame.K_LCTRL:
                 add_object__.control_z()
@@ -60,13 +64,21 @@ while True:
             # == Load some Level ==
             if event.key == pygame.K_4:
                 level_editor.load_level()
+            # == Manage Levels ==
+            if event.key == pygame.K_5:
+                level_editor.merge_levels()
+            # == Create blank level files
+            if event.key == pygame.K_6:
+                level_editor.create_levels()
+            # == Delete level files ==
+            if event.key == pygame.K_7:
+                level_editor.delete_levels()
             # == Level Begin ==
             if event.key == pygame.K_1:
                 level_editor.begin_level()
             # == Level End ==
             if event.key == pygame.K_2:
                 level_editor.end_level()
-
         # === Key Button Up ===
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_d:
