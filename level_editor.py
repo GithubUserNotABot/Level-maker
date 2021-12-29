@@ -5,9 +5,12 @@ import os
 rect_list = None
 BeginLevel = None
 EndLevel = None
+LoadedLevel = None
+counter_file = 0
+length_of_file = None
 
 def save_level():
-    global rect_list, BeginLevel, EndLevel, file_name
+    global rect_list, BeginLevel, EndLevel
     file_name = None
 
     rect_list = add_object__.get_objects()
@@ -27,7 +30,7 @@ def save_level():
             return Exception
 
     # get user to save as or to a project
-    user = input("say: \"[project name]\" : ")
+    user = input("say: \"project name\" : ")
     files = os.listdir(path='levels')
     findList = []
     for i in range(len(os.listdir(path='levels'))):
@@ -38,8 +41,13 @@ def save_level():
         if (user + ".txt") == findList[i]:
             file_name = user + ".txt"
     if file_name is None:
-        print("couldn't find file, please use \"6\" to create file")
-        return
+        yesNoUser = input("couldn't find file, create file with that name? (y or n) : ")
+        if yesNoUser.upper() == "Y":
+            file_name = user + ".txt"
+            create_levels(override=str(file_name))
+        if yesNoUser.upper() != "Y":
+            print(" == okay returning to game.. == ")
+            return
 
     if rect_list:
         user = input("Are you sure you want to save the level? (Y or N) : ")
@@ -68,7 +76,7 @@ def save_level():
         return
 def load_level():
     # Seeing how many lines there are in the file
-    global BeginLevel, EndLevel, file_name
+    global BeginLevel, EndLevel, LoadedLevel, counter_file
     file_name = None
     user = input("Name of level: ") + ".txt"
     files = os.listdir(path='levels')
@@ -110,7 +118,7 @@ def load_level():
     # flag
     try:
         int(user)
-    except ValueError:
+    except ValueError or IndexError:
         print(" === don't tell me something, say a whole number... === ")
         return
 
@@ -139,6 +147,7 @@ def load_level():
     # makes the "end level" block
     end_level(override=(EndLevel[1][0], EndLevel[1][1]))
 
+    LoadedLevel = file_name, user
     print(" === Loaded Successfully === ")
 def begin_level(override=(int, int)):
     # flag
@@ -200,14 +209,23 @@ def merge_levels():
             first.close()
 
     print(" === Merge Successful === ")
-def create_levels():
+def create_levels(override=None):
+    if override is not None:
+        file = open(f"levels/{override}", "x")
+        file.close()
+        print(f" === level {override} was made === ")
+        return
     user = input("level name (say quit to not make one): ")
     if user.upper() == "QUIT":
         print("== No level was made == ")
         return
     user = user + ".txt"
-    file = open(f"levels/{user}", "x")
-    file.close()
+    try:
+        file = open(f"levels/{user}", "x")
+        file.close()
+    except FileExistsError:
+        print("=== File you inputted already exists.. == ")
+        return
     print(f" === level {user} was made === ")
 def delete_levels():
     user = input("input file to be deleted (say quit to return to game): ")
@@ -226,3 +244,49 @@ def delete_levels():
             print(f" === okay {user} was deleted === ")
             return
     print("File that you inputted was not found ")
+def re_loadLevel(override=None):
+    global BeginLevel, EndLevel, LoadedLevel
+    # flag
+    if not LoadedLevel:
+        print(" == Not possible == \n")
+    if LoadedLevel is not None:
+        if override is None:
+            file_name = LoadedLevel[0]
+            file_num = int(LoadedLevel[1])
+        if override is not None:
+            file_name = override[0]
+            file_num = int(override[1])
+        file = open(file_name, 'r')
+        file_lines = file.readlines()
+        file.close()
+
+        add_object__.reset()
+        level_list_raw = file_lines[int(file_num) - 1]
+        level_list = dict(eval(level_list_raw))
+
+        dict_obstacles = level_list.get("obstacles")
+        dict_begin = level_list.get("begin level")
+        dict_end = level_list.get("end level")
+
+        BeginLevel = dict_begin[0], (dict_begin[1][0], dict_begin[1][1], dict_begin[1][2], dict_begin[1][3])
+        EndLevel = dict_end[0], (dict_end[1][0], dict_end[1][1], dict_end[1][2], dict_end[1][3])
+
+        counter = 0
+        for i in range(len(dict_obstacles)):
+            add_object__.make(dict_obstacles[counter][0],
+                              (dict_obstacles[counter][1][0], dict_obstacles[counter][1][1]),
+                              (dict_obstacles[counter][1][2], dict_obstacles[counter][1][3]))
+            counter += 1
+        # makes the "begin level" block
+        begin_level(override=(BeginLevel[1][0], BeginLevel[1][1]))
+        # makes the "end level" block
+        end_level(override=(EndLevel[1][0], EndLevel[1][1]))
+
+        LoadedLevel = file_name, file_num
+def load_next_level():
+    global counter_file
+    if LoadedLevel is not None:
+        print(LoadedLevel[1], counter_file)
+        if int(int(LoadedLevel[1]) + 1) > int(counter_file):
+            return
+        re_loadLevel(override=(LoadedLevel[0], int(LoadedLevel[1]) + 1))

@@ -2,8 +2,10 @@ import pygame
 import add_object__
 import level_editor
 
+add_object__.makefolder()
+
 win = pygame.display.set_mode((1000, 900))
-A_ = add_object__
+pygame.display.set_caption("Untitled level Editor")
 
 player_x, player_y = 0, 0
 key = [None, None, None, None]
@@ -24,8 +26,8 @@ begin_block = None
 clock = pygame.time.Clock()
 # === Main Loop ===
 
-A_.get_win(win)
-A_.get_size(player_size, block_size)
+# add_object__.get_win(win)   # todo: watch for errors
+add_object__.get_size(player_size, block_size)
 
 while True:
     # == FPS ==
@@ -53,8 +55,17 @@ while True:
 
             # == Escape key ==
             if event.key == pygame.K_ESCAPE:
-                print(" ==== Shutting down... ====")
-                raise SystemExit
+                user = input("do you want to save before quiting? (y or n) : ")
+                if user.upper() != "Y":
+                    print(" ==== Shutting down... ====")
+                    raise SystemExit
+                else:
+                    lv = level_editor.save_level()
+                    if lv == Exception:
+                        print("\nReturned an Exception, follow any instructions above.\n")
+                    if lv is None:
+                        print(" ==== Shutting down... ====")
+                        raise SystemExit
             # == Control Z ==
             if event.key == pygame.K_LCTRL:
                 add_object__.control_z()
@@ -64,7 +75,7 @@ while True:
             # == Load some Level ==
             if event.key == pygame.K_4:
                 level_editor.load_level()
-            # == Manage Levels ==
+            # == Merge Levels ==
             if event.key == pygame.K_5:
                 level_editor.merge_levels()
             # == Create blank level files
@@ -73,13 +84,16 @@ while True:
             # == Delete level files ==
             if event.key == pygame.K_7:
                 level_editor.delete_levels()
+            # == Re-load level ==
+            if event.key == pygame.K_8:
+                level_editor.re_loadLevel()
             # == Level Begin ==
             if event.key == pygame.K_1:
                 level_editor.begin_level()
             # == Level End ==
             if event.key == pygame.K_2:
                 level_editor.end_level()
-        # === Key Button Up ===
+        # === Get key Button Up ===
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_d:
                 break_key[0] = True
@@ -99,8 +113,8 @@ while True:
                 left_click = True
                 left_click_xy_first = pygame.mouse.get_pos()
             if event.button == 3:
-                player_x, player_y = pygame.mouse.get_pos()
-        # == Get mouse up press ==
+                add_object__.player_x, add_object__.player_y = pygame.mouse.get_pos()
+        # == Get mouse up ==
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 left_click = False
@@ -114,7 +128,6 @@ while True:
         pygame.draw.line(win, (255, 0, 255), (left_click_xy_first[0], left_click_xy_first[1]), (left_click_xy_first[0], mouse_pos[1]))
         pygame.draw.line(win, (255, 0, 255), (mouse_pos[0], mouse_pos[1]), (left_click_xy_first[0], mouse_pos[1]))
         pygame.draw.line(win, (255, 0, 255), (mouse_pos[0], mouse_pos[1]), (mouse_pos[0], left_click_xy_first[1]))
-
     # == For making the blocks custom size ==
     if not left_click:
         if to_draw:
@@ -132,29 +145,27 @@ while True:
                 block_size = to_draw[0][1][0] - to_draw[0][0][0], to_draw[0][1][1] - to_draw[0][0][1]
                 add_object__.make((0, 255, 255), (to_draw[0][1][0], to_draw[0][1][1] - block_size[1]), (abs(block_size[0]), abs(block_size[1])))
             to_draw.clear()
-
+            left_click_xy_first = None
     # == Movement ==
     if key[0] == 'd':
         if not break_key[0]:
-            player_x += force
+            add_object__.player_x += force
     if key[1] == 'a':
         if not break_key[1]:
-            player_x -= force
+            add_object__.player_x -= force
     if key[2] == 's':
         if not break_key[2]:
-            player_y += force
+            add_object__.player_y += force
     if key[3] == 'w':
         if not break_key[3]:
-            player_y -= force
+            add_object__.player_y -= force
 
-    # === Collision system ===
-    coll_flag = A_.coll_flagger()
-    if coll_flag[0]:
-        player_x, player_y = A_.get_reset_pos()
+    # = Player pos =
+    player_x, player_y = add_object__.playerPos()
 
     # ==== Working on it ====
     pygame.draw.rect(win, (255, 50, 200), (player_x, player_y, player_size[0], player_size[1]))
 
-    A_.update__(player_x, player_y)
+    add_object__.update__(player_x, player_y)
     pygame.display.update()
     win.fill((0, 0, 0))
